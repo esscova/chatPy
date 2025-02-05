@@ -3,25 +3,23 @@ import websockets
 
 conexoes = set()
 
-async def chat(websocket, path):
-    print(f'Novo cliente conectado: {websocket}\nTotal de conexões: {len(conexoes)}\n')
+async def chat(websocket):
     conexoes.add(websocket)
-   
+    print(f"Novo cliente conectado! Total de clientes: {len(conexoes)}")
+
     try:
-        async for message in websocket:
-            await broadcast(message)
+        async for mensagem in websocket:
+            print(f"Mensagem recebida: {mensagem}")
+            for conexao in conexoes:
+                if conexao != websocket:  
+                    await conexao.send(f"Cliente diz: {mensagem}")
     finally:
         conexoes.remove(websocket)
-        print(f'Cliente desconectado: {websocket}\nTotal de conexões: {len(conexoes)}\n')
+        print(f"Cliente desconectado. Total de clientes: {len(conexoes)}")
 
-async def broadcast(message):
-    for conexao in conexoes:
-        if conexao != conexoes:
-            await conexao.send(message)
-
-async def main ():
+async def main():
     async with websockets.serve(chat, "localhost", 8765):
-        print("Servidor iniciado em ws://localhost:8765")
-        await asyncio.Future()
+        print("Servidor de chat WebSocket iniciado em ws://localhost:8765")
+        await asyncio.Future()  
 
 asyncio.run(main())
