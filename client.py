@@ -12,7 +12,10 @@ async def receber_mensagens(websocket):
 
 async def chat_cliente():
     async with websockets.connect("ws://localhost:8765") as websocket:
+        nome = input("Digite seu nome: ")
+        await websocket.send(nome)
         print("Conectado ao servidor de chat!")
+
         await asyncio.gather(
             enviar_mensagens(websocket),
             receber_mensagens(websocket)
