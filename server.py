@@ -1,34 +1,46 @@
 import asyncio
 import websockets
 
-conexoes = set()
+conexoes = set()  # conexoes ativas
+historico = []    # histórico de mensagens
 
 async def chat(websocket):
     conexoes.add(websocket)
-    nome = await websocket.recv()  
-    print(f"{nome} conectou-se! Total de clientes: {len(conexoes)}")
+    print(f"Novo cliente conectado! Total de clientes: {len(conexoes)}")
 
     try:
+        nome = await websocket.recv()
+        print(f"{nome} entrou no chat.")
+
+        for msg in historico:
+            await websocket.send(msg)
+
+        entrada_msg = f"[Sistema] {nome} entrou no chat."
+        historico.append(entrada_msg)
+        for conexao in conexoes:
+            await conexao.send(entrada_msg)
+
         async for mensagem in websocket:
-            print(f"{nome} diz: {mensagem}")
+            msg_formatada = f"[{nome}] {mensagem}"
+            print(msg_formatada)
+            historico.append(msg_formatada)
+
             for conexao in conexoes:
-                if conexao != websocket:
-                    await conexao.send(f"{nome} diz: {mensagem}")
+                await conexao.send(msg_formatada)
+
     except websockets.exceptions.ConnectionClosedError:
         print(f"{nome} desconectou.")
     finally:
         conexoes.remove(websocket)
-        print(f"{nome} desconectou. Total de clientes: {len(conexoes)}")
+        saida_msg = f"[Sistema] {nome} saiu do chat."
+        historico.append(saida_msg)
+        for conexao in conexoes:
+            await conexao.send(saida_msg)
+        print(f"{nome} desconectado. Total de clientes: {len(conexoes)}")
 
 async def main():
-    async with websockets.serve(
-        chat, 
-        "localhost",
-        8765,
-        ping_interval=60,
-        ping_timeout=30
-        ):
-            print("Servidor de chat WebSocket iniciado em ws://localhost:8765")
-            await asyncio.Future()  
+    async with websockets.serve(chat, "localhost", 8765):
+        print("Servidor de chat WebSocket iniciado em ws://localhost:8765")
+        await asyncio.Future() 
 
 asyncio.run(main())

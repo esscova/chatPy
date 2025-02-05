@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        #login {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #fff;
+        }
+        #login input, #login button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 200px;
+        }
+        #login button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        #login button:hover {
+            background-color: #0056b3;
+        }
+        #chat {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #fff;
+        }
+        #mensagens {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+        #entrada {
+            display: flex;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+        }
+        #mensagem {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #enviar {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #enviar:hover {
+            background-color: #0056b3;
+        }
+        .mensagem {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .mensagem.sistema {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .mensagem.usuario {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .mensagem.minha {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <!-- NOME DO USUARIO -->
+    <div id="login">
+        <input type="text" id="nome" placeholder="Digite seu nome...">
+        <button id="confirmarNome">Confirmar</button>
+    </div>
+
+    <!-- TELA DO CHAT -->
+    <div id="chat">
+        <div id="mensagens"></div>
+        <div id="entrada">
+            <input type="text" id="mensagem" placeholder="Digite sua mensagem...">
+            <button id="enviar">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const loginDiv = document.getElementById("login");
+        const chatDiv = document.getElementById("chat");
+        const nomeInput = document.getElementById("nome");
+        const confirmarNomeBtn = document.getElementById("confirmarNome");
+        const mensagensDiv = document.getElementById("mensagens");
+        const mensagemInput = document.getElementById("mensagem");
+        const enviarBtn = document.getElementById("enviar");
+        let nome = "";
+
+        // CONEXAO WS
+        const websocket = new WebSocket("ws://localhost:8765");
+
+        // EVENTO PARA NOME DO USUARIO E INICIO NO CHAT
+        confirmarNomeBtn.addEventListener("click", () => {
+            nome = nomeInput.value.trim();
+            if (nome) {
+                websocket.send(nome);
+                loginDiv.style.display = "none";
+                chatDiv.style.display = "flex";
+            }
+        });
+
+        // MSG RECEBIDA
+        websocket.onmessage = (event) => {
+            const mensagem = event.data;
+            const mensagemElement = document.createElement("div");
+
+            // ESTILO PARA MSG
+            if (mensagem.includes("[Sistema]")) {
+                mensagemElement.className = "mensagem sistema";
+            } else if (mensagem.includes(`[${nome}]`)) {
+                mensagemElement.className = "mensagem minha";
+            } else {
+                mensagemElement.className = "mensagem usuario"; 
+            }
+
+            mensagemElement.textContent = mensagem;
+            mensagensDiv.appendChild(mensagemElement);
+            mensagensDiv.scrollTop = mensagensDiv.scrollHeight; // SCROLL
+        };
+
+        const enviarMensagem = () => {
+            const mensagem = mensagemInput.value.trim();
+            if (mensagem) {
+                websocket.send(mensagem);
+                mensagemInput.value = ""; 
+            }
+        };
+
+        // EVENTOS P ENVIAR MSG
+        enviarBtn.addEventListener("click", enviarMensagem);
+
+        mensagemInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                enviarMensagem();
+            }
+        });
+    </script>
+</body>
+</html>
