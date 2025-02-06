@@ -7,10 +7,8 @@ const loginDiv = document.getElementById("login");
         const enviarBtn = document.getElementById("enviar");
         let nome = "";
 
-        // CONEXAO WS
         const websocket = new WebSocket("ws://localhost:8765");
 
-        // EVENTO PARA NOME DO USUARIO E INICIO NO CHAT
         confirmarNomeBtn.addEventListener("click", () => {
             nome = nomeInput.value.trim();
             if (nome) {
@@ -20,34 +18,35 @@ const loginDiv = document.getElementById("login");
             }
         });
 
-        // MSG RECEBIDA
         websocket.onmessage = (event) => {
             const mensagem = event.data;
             const mensagemElement = document.createElement("div");
+            let classes = "px-4 py-2 rounded-lg max-w-md";
 
-            // ESTILO PARA MSG
             if (mensagem.includes("[Sistema]")) {
-                mensagemElement.className = "mensagem sistema";
+                classes += " bg-gray-100 text-gray-700";
+                mensagemElement.className = classes;
             } else if (mensagem.includes(`[${nome}]`)) {
-                mensagemElement.className = "mensagem minha";
+                classes += " bg-blue-600 text-white ml-auto";
+                mensagemElement.className = classes;
             } else {
-                mensagemElement.className = "mensagem usuario"; 
+                classes += " bg-gray-200 text-gray-800";
+                mensagemElement.className = classes;
             }
 
             mensagemElement.textContent = mensagem;
             mensagensDiv.appendChild(mensagemElement);
-            mensagensDiv.scrollTop = mensagensDiv.scrollHeight; // SCROLL
+            mensagensDiv.scrollTop = mensagensDiv.scrollHeight;
         };
 
         const enviarMensagem = () => {
             const mensagem = mensagemInput.value.trim();
             if (mensagem) {
                 websocket.send(mensagem);
-                mensagemInput.value = ""; 
+                mensagemInput.value = "";
             }
         };
 
-        // EVENTOS P ENVIAR MSG
         enviarBtn.addEventListener("click", enviarMensagem);
 
         mensagemInput.addEventListener("keypress", (event) => {
