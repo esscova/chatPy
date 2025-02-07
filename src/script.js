@@ -24,7 +24,7 @@ const loginDiv = document.getElementById("login");
             let classes = "px-4 py-2 rounded-lg max-w-md";
 
             if (mensagem.includes("[Sistema]")) {
-                classes += " bg-gray-100 text-gray-700";
+                classes += " text-center text-gray-800";
                 mensagemElement.className = classes;
             } else if (mensagem.includes(`[${nome}]`)) {
                 classes += " bg-blue-600 text-white ml-auto";
